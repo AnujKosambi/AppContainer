@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="RUBY_MODULE" version="4">
   <component name="ModuleRunConfigurationManager">
-    <configuration default="false" name="run" type="RubyRunConfigurationType" factoryName="Ruby" temporary="true">
+    <configuration default="false" name="run" type="RubyRunConfigurationType" factoryName="Ruby">
       <module name="AppContainer" />
       <RUBY_RUN_CONFIG NAME="RUBY_ARGS" VALUE="-e $stdout.sync=true;$stderr.sync=true;load($0=ARGV.shift)" />
       <RUBY_RUN_CONFIG NAME="WORK DIR" VALUE="$MODULE_DIR$" />
@@ -18,7 +18,7 @@
       </EXTENSION>
       <EXTENSION ID="org.jetbrains.plugins.ruby.motion.run.MotionSimulatorRunExtension" />
       <RUBY_RUN_CONFIG NAME="SCRIPT_PATH" VALUE="$MODULE_DIR$/run.rb" />
-      <RUBY_RUN_CONFIG NAME="SCRIPT_ARGS" VALUE="$USER_HOME$/Documents/IconChanger IconChanger" />
+      <RUBY_RUN_CONFIG NAME="SCRIPT_ARGS" VALUE="$USER_HOME$/Mobile_Library/Test Test" />
       <RunnerSettings RunnerId="RubyDebugRunner" />
       <RunnerSettings RunnerId="RubyRunner" />
       <ConfigurationWrapper RunnerId="RubyDebugRunner" />

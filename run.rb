@@ -16,7 +16,8 @@ class Run
     @main_project_path = ARGV[0]
     @scheme_name = ARGV[1]
     full_access_path = File.join(@main_project_path,@scheme_name+".xcodeproj","project.pbxproj")
-    AppContainer::XCProject.open(Pathname.new(full_access_path))
+    project = AppContainer::XCProject.open(Pathname.new(full_access_path))
+    project.add_file(Pathname.new('/Users/anujkosambi/Mobile_Library/Test/Test/ViewController.m'))
   end
 end
 
