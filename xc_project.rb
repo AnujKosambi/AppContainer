@@ -1,5 +1,7 @@
+require 'securerandom'
 require_relative 'file_manager'
 require_relative 'pbx_proj_manager'
+require_relative 'PBXClasses/pbx_file_reference'
 
 module AppContainer
   class XCProject
@@ -29,7 +31,10 @@ module AppContainer
       raise "AppContainer::File not found at: #{filepath.to_s}" unless AppContainer::FileManager.fileExits?(filepath)
       raise "AppContainer::Please Open Project: #{@pathname.basename.to_s}" if @projManager.nil?
       puts "Adding File..."
-      pbx_
+      pbxfile = AppContainer::PBXFileReference.new
+      puts SecureRandom.uuid.to_s
+      puts pbxfile.generateHash
+
     end
 
 
@@ -50,6 +55,9 @@ module AppContainer
       @pathname.dirname.basename
     end
 
+    def genrateUUID4()
+      
+    end
 
   end
 end

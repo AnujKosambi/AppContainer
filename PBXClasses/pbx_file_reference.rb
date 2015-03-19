@@ -1,4 +1,4 @@
-require 'object'
+require_relative 'object'
 
 module AppContainer
 
@@ -12,6 +12,12 @@ module AppContainer
 
     def initialize
       super(self)
+      @explicitFileType = nil
+      @lastKnownFileType = nil
+      @path = nil
+      @sourceTree = nil
+      @includeInIndex = nil
     end
+
   end
 end
