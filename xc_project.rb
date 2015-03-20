@@ -32,9 +32,17 @@ module AppContainer
       raise "AppContainer::Please Open Project: #{@pathname.basename.to_s}" if @projManager.nil?
       puts "Adding File..."
       pbxfile = AppContainer::PBXFileReference.new
-      puts SecureRandom.uuid.to_s
-      puts pbxfile.generateHash
-
+      pbxfile.lastKnownFileType='sourcecode.c.objc'
+      pbxfile.path=filepath.basename.to_s
+      pbxfile.sourceTree="<group>"
+      uuid=genrateUUID4
+      puts uuid
+      file_hash=pbxfile.generateHash
+      puts file_hash
+      @projManager.allObjects['objects'][uuid] = file_hash
+      file = File.new(File.join("#{@pathname.dirname}","newproject.json"),"w")
+      file.puts(@projManager.allObjects.to_json)
+      file.close
     end
 
 
@@ -56,7 +64,8 @@ module AppContainer
     end
 
     def genrateUUID4()
-      
+      uuid = SecureRandom.uuid.to_s
+      uuid = uuid.split("-")[1..-1].join().upcase
     end
 
   end

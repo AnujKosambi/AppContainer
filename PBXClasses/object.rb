@@ -14,7 +14,8 @@ class Object
     hash = Hash.new()
     instance_variables.each do |variable|
       x = variable.to_s[1..-1]
-      hash[x] = instance_variable_get(variable)
+      value = instance_variable_get(variable)
+      ( hash[x] = value ) unless value.nil?
     end
     hash
   end

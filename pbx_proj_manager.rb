@@ -17,6 +17,8 @@ class PBXProjManager
   attr_accessor :objectVersion
   attr_accessor :objects
   attr_accessor :rootObject
+  attr_accessor :allObjects
+
 
   def initialize(path)
     @pathname = path
@@ -26,13 +28,14 @@ class PBXProjManager
   def fetch()
     convertToJSON()
     @file = AppContainer::FileManager.read(@json_pathname)
-    @content=@file.read()
+    @content = @file.read()
     hash = JSON[@content]
     @rootObject = hash['rootObject']
     @objects = hash['objects']
     @objectVersion = hash['objectVersion']
     @classes = hash['classes']
     @archiveVersion = hash['archiveVersion']
+    @allObjects = hash
   end
 
   def convertToJSON()
