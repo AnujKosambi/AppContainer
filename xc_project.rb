@@ -31,14 +31,15 @@ module AppContainer
       raise "AppContainer::File not found at: #{filepath.to_s}" unless AppContainer::FileManager.fileExits?(filepath)
       raise "AppContainer::Please Open Project: #{@pathname.basename.to_s}" if @projManager.nil?
       puts "Adding File..."
+
       pbxfile = AppContainer::PBXFileReference.new
       pbxfile.lastKnownFileType='sourcecode.c.objc'
       pbxfile.path=filepath.basename.to_s
       pbxfile.sourceTree="<group>"
+
       uuid=genrateUUID4
-      puts uuid
       file_hash=pbxfile.generateHash
-      puts file_hash
+
       @projManager.allObjects['objects'][uuid] = file_hash
       file = File.new(File.join("#{@pathname.dirname}","newproject.json"),"w")
       file.puts(@projManager.allObjects.to_json)
