@@ -18,7 +18,7 @@ class Run
     full_access_path = File.join(@main_project_path,@scheme_name+".xcodeproj","project.pbxproj")
     project = AppContainer::XCProject.open(Pathname.new(full_access_path))
 
-    project.add_new_group("Anuj")
+    project.add_new_group("Anuj","Test/ANUJ")
     project.add_file(Pathname.new('/Users/anujkosambi/Mobile_Library/Test/Test/ViewController.m'))
     project.save
   end

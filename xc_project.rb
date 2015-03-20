@@ -44,21 +44,34 @@ module AppContainer
       uuid = generateUUID4
       @projectManager.PBXFileReferences[uuid] = pbxfile
 
-      group = find_group_by_name("Test")
+      group = find_group_by_name("Test")  #To DO Change
       group.children << uuid
 
       file_hash=pbxfile.generateHash
       @projectManager.objects[uuid] = file_hash
     end
 
-    def find_group_by_name(groupName) #to DO check by Path
+    def find_group_by_name(groupPath) #to DO check by Path
+      paths = groupPath.split("/")
       groupID = 0
+      parentID = 0
+
       @projectManager.groups.each do |key,value|
-          if value.name == groupName || value.path == groupName
-            groupID = key
-            break
-          end
+        if value.name == paths[0] || value.path == paths[0]
+          parentID = key
+          break
+        end
       end
+
+      return nil if parentID == 0
+
+      if paths.count == 1
+        return @projectManager.groups[parentID]
+      else
+
+
+      end
+
       return @projectManager.groups[groupID] if groupID != 0
       return nil
     end
