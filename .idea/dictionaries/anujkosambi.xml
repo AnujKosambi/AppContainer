@@ -2,6 +2,8 @@
   <dictionary name="anujkosambi">
     <words>
       <w>filepath</w>
+      <w>pbxgroup</w>
+      <w>pbxproj</w>
     </words>
   </dictionary>
 </component>

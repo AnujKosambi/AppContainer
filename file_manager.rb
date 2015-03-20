@@ -1,3 +1,5 @@
+require 'json'
+
 module AppContainer
 class FileManager
   def self.dirExists?(path)
@@ -19,5 +21,13 @@ class FileManager
   def self.read(path)
     File.new(path,'r')
   end
+
+  def self.PerformCommand(command)
+    thread = Thread.new do
+      %x(#{command})
+    end
+    thread.join
+  end
+
 end
 end

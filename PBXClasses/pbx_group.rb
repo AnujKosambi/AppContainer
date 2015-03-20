@@ -1,17 +1,19 @@
-
+require_relative 'object'
 module AppContainer
 
-class PBXGroup
+class PBXGroup < Object
 
   attr_accessor :sourceTree
   attr_accessor :name
   attr_accessor :children
+  attr_accessor :path
 
-  def initialize
+  def initialize(hash={})
     super(self)
-    @children = nil
-    @name = nil
-    @sourceTree = nil
+    @children = hash['children']
+    @name = hash['name']
+    @path = hash['path']
+    @sourceTree = hash['sourceTree']
   end
 
 end

@@ -18,6 +18,7 @@ module AppContainer
       @path = hash['path']
       @sourceTree = hash['sourceTree']
       @includeInIndex = hash['includeInIndex']
+      @name = hash['name']
     end
 
   end
