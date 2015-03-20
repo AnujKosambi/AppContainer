@@ -33,14 +33,14 @@ module AppContainer
       puts "Adding File..."
 
       pbxfile = AppContainer::PBXFileReference.new
-      pbxfile.lastKnownFileType='sourcecode.c.objc'
+      pbxfile.lastKnownFileType='sourcecode.c.objc' #TO DO
       pbxfile.path=filepath.basename.to_s
       pbxfile.sourceTree="<group>"
 
       uuid=genrateUUID4
       file_hash=pbxfile.generateHash
 
-      @projManager.allObjects['objects'][uuid] = file_hash
+      @projManager.objects[uuid] = file_hash
       file = File.new(File.join("#{@pathname.dirname}","newproject.json"),"w")
       file.puts(@projManager.allObjects.to_json)
       file.close

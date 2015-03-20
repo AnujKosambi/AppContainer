@@ -10,13 +10,14 @@ module AppContainer
     attr_accessor :name
     attr_accessor :includeInIndex
 
-    def initialize
+    def initialize(hash={})
       super(self)
-      @explicitFileType = nil
-      @lastKnownFileType = nil
-      @path = nil
-      @sourceTree = nil
-      @includeInIndex = nil
+
+      @explicitFileType = hash['explicitFileType']
+      @lastKnownFileType = hash['lastKnownFileType']
+      @path = hash['path']
+      @sourceTree = hash['sourceTree']
+      @includeInIndex = hash['includeInIndex']
     end
 
   end

@@ -2,7 +2,7 @@
 module AppContainer
 
 class PBXGroup
-  
+
   attr_accessor :sourceTree
   attr_accessor :name
   attr_accessor :children
