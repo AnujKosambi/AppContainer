@@ -3,6 +3,7 @@ require_relative 'file_manager'
 require_relative 'pbx_project_manager'
 require_relative 'PBXClasses/pbx_file_reference'
 require_relative 'PBXClasses/pbx_group'
+require_relative 'constants'
 
 module AppContainer
   class XCProject
@@ -42,6 +43,7 @@ module AppContainer
              raise "AppContainer::Group Not Found #{groupPath}"
       end
       group.children << uuid
+      add_build_file(pbxfile)
     end
 
     def add_file_to_group(filePath,group, sourceTree = "<group>")
@@ -51,20 +53,25 @@ module AppContainer
       group.children << uuid
     end
 
+    def add_build_file(fileRef)
+      pbx_buildfile = AppContainer::PBXBuildFile.new
+      pbx_buildfile.fileRef = fileRef
+      uuid = generateUUID4
+      puts uuid
+      @projectManager.PBXBuildFiles[uuid] = pbx_buildfile
+      puts @projectManager.PBXNativeTargets['Test']
+    end
+
     def find_group_by_name(groupPath,giveLastMatched=false) #to DO check by Path
       currentGroupID = @projectManager.PBXProjectSection.mainGroup
       currentGroup = @projectManager.groups[currentGroupID]
-
       paths = groupPath.scan(/[\w'-]+/)
       groupID = 0
       parentID = 0
       foundPath = ""
-
       if paths.count == 0
         return {:path => foundPath, :obj => currentGroup }
       end
-
-
       for i in 0...paths.count
         isMatches = false
         currentGroup.children.each do |value|
@@ -78,14 +85,10 @@ module AppContainer
             end
           end
         end
-
         return nil if isMatches == false &&  giveLastMatched == false
         return {:path => foundPath, :obj => currentGroup } if i+1 == paths.count
       end
     end
-
-
-
 
 
     def add_new_group(group_name,create: false,sourceTree: "<group>")
@@ -105,7 +108,6 @@ module AppContainer
     end
 
 
-
     def add_new_group_to_pbxparent(group_name,parentGroup = nil,sourceTree = "<group>")
       if(parentGroup == nil)
         parentGroup = @projectManager.groups[@projectManager.PBXProjectSection.mainGroup]
@@ -118,9 +120,6 @@ module AppContainer
       pbxGroup.children = Array.new
       @projectManager.groups[newUUID] = pbxGroup
     end
-
-
-
 
 
     def save
@@ -148,17 +147,22 @@ module AppContainer
 =end
 
     def prepareFileReference(filePath, sourceTree)
-      raise "AppContainer::File not found at: #{filepath.to_s}" unless AppContainer::FileManager.fileExits?(filePath)
+      raise "AppContainer::File not found at: #{filepath.to_s}" \
+                unless AppContainer::FileManager.dirExists?(filePath) || AppContainer::FileManager.fileExits?(filePath)
       raise "AppContainer::Please Open Project: #{@pathname.basename.to_s}" if @projectManager.nil?
 
       puts "Adding File..."
 
       pbxfile = AppContainer::PBXFileReference.new
-      pbxfile.lastKnownFileType = 'sourcecode.c.objc' #TO DO
-
+      pbxfile.lastKnownFileType = 'folder.assetcatalog' #TO DO
       pbxfile.path = filePath.basename.to_s
       pbxfile.sourceTree = sourceTree
       pbxfile
+    end
+
+
+    def getLastKnownFileName(filePath)
+      AppContainer::Constants.FILE_TYPES_BY_EXTENSION[filePath.split('.')[-1]]
     end
 
     def getRootPathOfGroup(group)
@@ -174,6 +178,7 @@ module AppContainer
       uuid = SecureRandom.uuid.to_s
       uuid = uuid.split("-")[1..-1].join().upcase
     end
+
 
   end
 end

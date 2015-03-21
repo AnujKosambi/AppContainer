@@ -1,7 +1,7 @@
-require_relative 'object'
+require_relative 'abstract_object'
 module AppContainer
 
-class PBXGroup < Object
+class PBXGroup < AbstractObject
 
   attr_accessor :sourceTree
   attr_accessor :name

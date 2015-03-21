@@ -1,8 +1,8 @@
-require_relative 'object'
+require_relative 'abstract_object'
 
 module AppContainer
 
-  class PBXFileReference < Object
+  class PBXFileReference < AbstractObject
     attr_accessor :explicitFileType
     attr_accessor :lastKnownFileType
     attr_accessor :path
@@ -17,8 +17,9 @@ module AppContainer
       @lastKnownFileType = hash['lastKnownFileType']
       @path = hash['path']
       @sourceTree = hash['sourceTree']
-      @includeInIndex = hash['includeInIndex']
       @name = hash['name']
+      @includeInIndex = hash['includeInIndex']
+
     end
 
   end

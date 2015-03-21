@@ -2,7 +2,7 @@
 
 module AppContainer
 
-class Object
+class AbstractObject
 
   attr_accessor :isa
 

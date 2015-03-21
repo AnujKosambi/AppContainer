@@ -1,8 +1,8 @@
-require_relative 'object'
+require_relative 'abstract_object'
 
 module AppContainer
 
-class PBXProject < Object
+class PBXProject < AbstractObject
   attr_accessor :includeInIndex
   attr_accessor :buildConfigurationList
   attr_accessor :compatibilityVersion
