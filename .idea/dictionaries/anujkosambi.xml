@@ -3,6 +3,7 @@
     <words>
       <w>filepath</w>
       <w>pbxgroup</w>
+      <w>pbxparent</w>
       <w>pbxproj</w>
     </words>
   </dictionary>

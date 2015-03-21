@@ -28,7 +28,7 @@ module AppContainer
     end
 
 
-    def add_file(filepath, sourceTree = "<group>")
+    def add_file(filepath,groupPath, sourceTree = "<group>",createGroups: true)
       #To Do file Exits or Not
       raise "AppContainer::File not found at: #{filepath.to_s}" unless AppContainer::FileManager.fileExits?(filepath)
       raise "AppContainer::Please Open Project: #{@pathname.basename.to_s}" if @projectManager.nil?
@@ -44,58 +44,98 @@ module AppContainer
       uuid = generateUUID4
       @projectManager.PBXFileReferences[uuid] = pbxfile
 
-      group = find_group_by_name("Test")  #To DO Change
+      group = find_group_by_name(groupPath) 
+
+      if group
+        group = group[:obj]
+
+      elsif createGroups #to do reduce find methods
+              group = add_new_group(groupPath,create:true)
+      else
+             raise "AppContainer::Group Not Found #{sourceTree}"
+
+      end
+
       group.children << uuid
 
       file_hash=pbxfile.generateHash
       @projectManager.objects[uuid] = file_hash
     end
 
-    def find_group_by_name(groupPath) #to DO check by Path
+    def find_group_by_name(groupPath,giveLastMatched=false) #to DO check by Path
+      currentGroupID = @projectManager.PBXProjectSection.mainGroup
+      currentGroup = @projectManager.groups[currentGroupID]
+
       paths = groupPath.split("/")
       groupID = 0
       parentID = 0
+      foundPath = ""
 
-      @projectManager.groups.each do |key,value|
-        if value.name == paths[0] || value.path == paths[0]
-          parentID = key
-          break
+      if paths.count == 0
+        return {:path => foundPath, :obj => currentGroup }
+      end
+
+
+      for i in 0...paths.count
+        isMatches = false
+        currentGroup.children.each do |value|
+          if @projectManager.groups[value] != nil
+            if @projectManager.groups[value].name == paths[i] || @projectManager.groups[value].path == paths[i]
+              currentGroupID = value
+              currentGroup = @projectManager.groups[currentGroupID]
+              isMatches = true
+              foundPath += "/" + paths[i]
+              break
+            end
+          end
         end
+
+        return nil if isMatches == false &&  giveLastMatched == false
+        return {:path => foundPath, :obj => currentGroup } if i+1 == paths.count
       end
-
-      return nil if parentID == 0
-
-      if paths.count == 1
-        return @projectManager.groups[parentID]
-      else
-
-
-      end
-
-      return @projectManager.groups[groupID] if groupID != 0
-      return nil
     end
 
-    def add_new_group(group_name,parentGroup_name = "",sourceTree = "<group>")
 
-      parent_pbxgroup = find_group_by_name(parentGroup_name)
 
-      unless(parent_pbxgroup)
-        parent_pbxgroup = @projectManager.groups[@projectManager.PBXProjectSection.mainGroup]
+
+
+    def add_new_group(group_name,create: false,sourceTree: "<group>")
+      findObj = find_group_by_name(group_name,true);
+      parent_pbxgroup = findObj[:obj]
+
+      unless create
+        raise "AppContainer::Parent Group Not Found" if findObj[:path].split("/").count != parentGroup_name.split("/").count
+      else
+        donePath = findObj[:path]
+        remaining = group_name.split("/") - donePath.split("/")
+        remaining.each do |current|
+           parent_pbxgroup = add_new_group_to_pbxparent(current,parent_pbxgroup,sourceTree)
+        end
       end
+      parent_pbxgroup
+    end
 
+
+
+    def add_new_group_to_pbxparent(group_name,parentGroup = nil,sourceTree = "<group>")
+      if(parentGroup == nil)
+        parentGroup = @projectManager.groups[@projectManager.PBXProjectSection.mainGroup]
+      end
       newUUID = generateUUID4
-      parent_pbxgroup.children << newUUID
-
+      parentGroup.children << newUUID
       pbxGroup = AppContainer::PBXGroup.new
       pbxGroup.name = group_name
       pbxGroup.sourceTree = sourceTree
+      pbxGroup.children = Array.new
       @projectManager.groups[newUUID] = pbxGroup
     end
 
+
+
+
+
     def save
       @projectManager.updateAllPBXObject
-
       puts @projectManager.allObjects
       temp_file = File.join("#{@pathname.dirname}","temp_project.json")
       file = File.new(temp_file,"w")
@@ -103,7 +143,6 @@ module AppContainer
       file.close
       command = 'plutil -convert xml1  -o ' + @pathname.to_s + ' -- '+temp_file
       AppContainer::FileManager.PerformCommand(command)
-
     end
 
     def create_new_project
@@ -118,6 +157,12 @@ module AppContainer
 
 =begin ++++++++++++++++++++++++++++++++++++Helpers +++++++++++++++++++++++++++++++++++++++
 =end
+
+    def getRootPathOfGroup(group)
+      path = group.name || group.path
+
+    end
+
 
     def getProjectNameFromPath
       @pathname.dirname.basename

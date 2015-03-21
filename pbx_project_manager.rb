@@ -78,7 +78,7 @@ class PBXProjectManager
 
   end
 
-  def updateAllPBXObject # To DO optimize
+  def updateAllPBXObject # To Do optimize
 
    @objects.clear
    @objects.merge!({@projectUUID => @PBXProjectSection.generateHash})
