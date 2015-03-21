@@ -2,12 +2,8 @@
 require 'rubygems'
 
 require_relative 'file_manager'
+require_relative 'Components/PBXClasses/pbx_class'
 
-
-require_relative 'PBXClasses/pbx_project'
-require_relative 'PBXClasses/pbx_file_reference'
-require_relative 'PBXClasses/pbx_build_file'
-require_relative 'PBXClasses/Target/pbx_target'
 
 module AppContainer
 class PBXProjectManager
@@ -22,6 +18,8 @@ class PBXProjectManager
   attr_accessor :PBXBuildFiles
   attr_accessor :PBXFileReferences
   attr_accessor :PBXSourcesBuildPhases
+  attr_accessor :XCBuildConfigurations
+
   attr_accessor :targets
 
 
@@ -59,6 +57,7 @@ class PBXProjectManager
     @PBXFileReferences  = Hash.new
     @PBXNativeTargets = Hash.new
     @PBXSourcesBuildPhases = Hash.new
+    @XCBuildConfigurations = Hash.new
 
     @groups = Hash.new
     @targets = Hash.new
@@ -94,7 +93,10 @@ class PBXProjectManager
         when "PBXFrameworksBuildPhase"
         when "PBXSourcesBuildPhase"
         when "PBXNativeTarget"
-          @targets[key] = AppContainer::PBXTarget.new(key,value)
+          @targets[key] = AppContainer::BuildPhases.new(key,value)
+        when "XCBuildConfiguration"
+          @XCBuildConfigurations[key] = AppContainer::XCBuildConfiguration.new(value)
+          @XCBuildConfigurations[key].prepare_method
         when nil
           raise "PBXObject is not Vaild #{key}:#{value}"
         else
@@ -109,7 +111,6 @@ class PBXProjectManager
     @targets.each do |key,target|
 
       target.root.buildPhases.each do |uuid|
-
         case @objects[uuid]['isa']
           when "PBXSourcesBuildPhase"
             target.addSourcesBuildPhases(uuid,@objects[uuid])
@@ -132,8 +133,9 @@ class PBXProjectManager
    @objects.merge!(@targets.reduce({}){ |hash, (k,v)| hash.merge(v.generateHash ) })
    @objects.merge!(@PBXFileReferences.reduce({}){ |hash, (k, v)| hash.merge( k => v.generateHash )  })
    @objects.merge!(@groups.reduce({}){ |hash, (k, v)| hash.merge( k => v.generateHash )  })
+   @objects.merge!(@XCBuildConfigurations.reduce({}){ |hash, (k,v)| hash.merge(k => v.generateHash ) })
    @objects.merge!(@otherObjects)
-    puts @objects.count
+
 
    @allObjects = Hash.new
    @allObjects['rootObject'] = @rootObject

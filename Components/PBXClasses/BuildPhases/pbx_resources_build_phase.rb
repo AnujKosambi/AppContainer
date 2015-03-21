@@ -1,4 +1,4 @@
-require_relative '../abstract_object'
+require_relative '../../abstract_object'
 class PBXResourcesBuildPhase < AppContainer::AbstractObject
 
   attr_accessor :buildActionMask
@@ -10,5 +10,6 @@ class PBXResourcesBuildPhase < AppContainer::AbstractObject
     @buildActionMask = hash['buildActionMask']
     @files = hash['files']
     @runOnlyForDeploymentPostprocessing = hash['runOnlyForDeploymentPostprocessing']
+    @files = Array.new unless @files
   end
 end

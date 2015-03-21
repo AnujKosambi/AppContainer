@@ -4,10 +4,10 @@ require_relative 'pbx_resources_build_phase'
 require_relative 'pbx_frameworks_build_phase'
 
 module AppContainer
-  class PBXTarget
+  class BuildPhases
 
     attr_accessor :sourcesBuildPhases
-    attr_accessor :frameworksBuildPhases
+    attr_accessor :frameworkBuildPhases
     attr_accessor :resourcesBuildPhases
 
     attr_accessor :generateHash

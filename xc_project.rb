@@ -1,9 +1,11 @@
 require 'securerandom'
 require_relative 'file_manager'
 require_relative 'pbx_project_manager'
-require_relative 'PBXClasses/pbx_file_reference'
-require_relative 'PBXClasses/pbx_group'
+require_relative 'Components/PBXClasses/pbx_class'
+require_relative 'Components/BuildSettings/xc_build_configuration'
+
 require_relative 'constants'
+
 
 module AppContainer
   class XCProject
@@ -58,8 +60,10 @@ module AppContainer
       pbx_buildfile.fileRef = fileRef
       uuid = generateUUID4
       @projectManager.PBXBuildFiles[uuid] = pbx_buildfile
+      pbx_buildfile.settings = AppContainer::Constants::BUILD_FILE_OPTIONAL
       target = find_target(target)
-      target.sourcesBuildPhases.files << uuid
+
+      target.frameworkBuildPhases.files << uuid
     end
 
     def find_target(name)
@@ -131,6 +135,13 @@ module AppContainer
       @projectManager.groups[newUUID] = pbxGroup
     end
 
+    public
+
+    def changeAppIcon(value)
+      @projectManager.XCBuildConfigurations.each do |key,config|
+        config.ASSETCATALOG_COMPILER_APPICON_NAME = value
+      end
+    end
 
     def save
       @projectManager.updateAllPBXObject
@@ -172,7 +183,7 @@ module AppContainer
 
 
     def getLastKnownFileName(filePath)
-      AppContainer::Constants.FILE_TYPES_BY_EXTENSION[filePath.split('.')[-1]]
+      AppContainer::Constants::FILE_TYPES_BY_EXTENSION[filePath.split('.')[-1]]
     end
 
     def getRootPathOfGroup(group)

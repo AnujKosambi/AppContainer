@@ -1,4 +1,4 @@
-require_relative '../abstract_object'
+require_relative '../../abstract_object'
 module AppContainer
   class PBXSourcesBuildPhase < AbstractObject
 
@@ -11,6 +11,7 @@ module AppContainer
       @buildActionMask = hash['@buildActionMask']
       @files = hash['files']
       @runOnlyForDeploymentPostprocessing = hash['runOnlyForDeploymentPostprocessing']
+      @files = Array.new unless @files
     end
   end
 end

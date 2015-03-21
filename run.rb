@@ -20,6 +20,7 @@ class Run
 
     project.add_new_group("Test/OHH",create: true)
     project.add_file(Pathname.new('/Users/anujkosambi/Mobile_Library/Test/Test/ViewController.m'),"/Test/ANUJ/Kosambi")
+    project.changeAppIcon("AppIcon")
     project.save
   end
 end

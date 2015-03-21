@@ -1,4 +1,5 @@
-require_relative '../abstract_object'
+require_relative '../../abstract_object'
+
 module AppContainer
   class PBXFrameworksBuildPhase < AbstractObject
 
