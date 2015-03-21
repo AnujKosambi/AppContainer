@@ -1,4 +1,4 @@
-require_relative 'abstract_object'
+require_relative '../abstract_object'
 module AppContainer
   class PBXNativeTarget < AbstractObject
     attr_accessor :buildConfigurationList
@@ -21,6 +21,7 @@ module AppContainer
       @productReference = hash['productReference']
       @productType = hash['productType']
     end
+
 
   end
 end

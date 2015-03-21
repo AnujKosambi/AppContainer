@@ -1,6 +1,6 @@
-require_relative 'abstract_object'
+require_relative '../abstract_object'
 module AppContainer
-  class PBXSourcesBuildPhase < AbstractObject
+  class PBXFrameworksBuildPhase < AbstractObject
 
     attr_accessor :buildActionMask
     attr_accessor :files

@@ -43,7 +43,7 @@ module AppContainer
              raise "AppContainer::Group Not Found #{groupPath}"
       end
       group.children << uuid
-      add_build_file(pbxfile)
+      add_build_file(uuid,'Test')
     end
 
     def add_file_to_group(filePath,group, sourceTree = "<group>")
@@ -53,13 +53,23 @@ module AppContainer
       group.children << uuid
     end
 
-    def add_build_file(fileRef)
+    def add_build_file(fileRef,target) #To Do  Check file action and source resource and framework
       pbx_buildfile = AppContainer::PBXBuildFile.new
       pbx_buildfile.fileRef = fileRef
       uuid = generateUUID4
-      puts uuid
       @projectManager.PBXBuildFiles[uuid] = pbx_buildfile
-      puts @projectManager.PBXNativeTargets['Test']
+      target = find_target(target)
+      target.sourcesBuildPhases.files << uuid
+    end
+
+    def find_target(name)
+      target = nil
+      @projectManager.targets.each do |key,value|
+        if value.root.name == name
+          target = @projectManager.targets[key]
+        end
+      end
+      target
     end
 
     def find_group_by_name(groupPath,giveLastMatched=false) #to DO check by Path

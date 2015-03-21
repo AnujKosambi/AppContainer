@@ -15,6 +15,7 @@ class PBXProject < AbstractObject
   attr_accessor :projectRoot
   attr_accessor :targets
 
+
   def initialize(hash={})
     super(self)
     @attributes = hash['includeInIndex']
@@ -29,6 +30,9 @@ class PBXProject < AbstractObject
     @projectRoot =  hash['projectRoot']
     @targets =  hash['targets']
   end
+
+
+
 end
 
 end

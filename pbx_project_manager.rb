@@ -1,11 +1,13 @@
-require_relative 'file_manager'
+
 require 'rubygems'
+
+require_relative 'file_manager'
+
 
 require_relative 'PBXClasses/pbx_project'
 require_relative 'PBXClasses/pbx_file_reference'
 require_relative 'PBXClasses/pbx_build_file'
-require_relative 'PBXClasses/pbx_sources_build_phase'
-require_relative 'PBXClasses/pbx_native_target'
+require_relative 'PBXClasses/Target/pbx_target'
 
 module AppContainer
 class PBXProjectManager
@@ -20,11 +22,14 @@ class PBXProjectManager
   attr_accessor :PBXBuildFiles
   attr_accessor :PBXFileReferences
   attr_accessor :PBXSourcesBuildPhases
-  attr_accessor :PBXNativeTargets
+  attr_accessor :targets
 
-  attr_accessor :groups
+
   attr_accessor :otherObjects
   attr_accessor :root_object
+
+
+  attr_accessor :groups
 
   attr_accessor :objects
   attr_accessor :rootObject
@@ -48,19 +53,19 @@ class PBXProjectManager
     @objectVersion = hash['objectVersion']
     @classes = hash['classes']
     @archiveVersion = hash['archiveVersion']
+    @allObjects = hash
 
     @PBXBuildFiles = Hash.new
     @PBXFileReferences  = Hash.new
     @PBXNativeTargets = Hash.new
     @PBXSourcesBuildPhases = Hash.new
+
     @groups = Hash.new
+    @targets = Hash.new
     @otherObjects = Hash.new
 
     puts @objects.count
     fetchAllPBXObject
-
-
-    @allObjects = hash
 
   end
 
@@ -85,12 +90,35 @@ class PBXProjectManager
           @groups[key] = AppContainer::PBXGroup.new(value)
         when "PBXFileReference"
           @PBXFileReferences[key] = AppContainer::PBXFileReference.new(value)
+        when "PBXResourcesBuildPhase"
+        when "PBXFrameworksBuildPhase"
         when "PBXSourcesBuildPhase"
-          @PBXSourcesBuildPhases[key] = AppContainer::PBXSourcesBuildPhase.new(value)
         when "PBXNativeTarget"
-          @PBXNativeTargets[key] = AppContainer::PBXNativeTarget.new(value)
+          @targets[key] = AppContainer::PBXTarget.new(key,value)
+        when nil
+          raise "PBXObject is not Vaild #{key}:#{value}"
         else
           @otherObjects[key] = value
+      end
+    end
+    prepareTargets
+  end
+
+  def prepareTargets
+
+    @targets.each do |key,target|
+
+      target.root.buildPhases.each do |uuid|
+
+        case @objects[uuid]['isa']
+          when "PBXSourcesBuildPhase"
+            target.addSourcesBuildPhases(uuid,@objects[uuid])
+          when "PBXFrameworksBuildPhase"
+            target.addFrameworkBuildPhases(uuid,@objects[uuid])
+          when "PBXResourcesBuildPhase"
+            target.addResourcesBuildPhases(uuid,@objects[uuid])
+        end
+
       end
     end
 
@@ -101,8 +129,7 @@ class PBXProjectManager
    @objects.clear
    @objects.merge!({@projectUUID => @PBXProjectSection.generateHash})
    @objects.merge!(@PBXBuildFiles.reduce({}){ |hash, (k, v)| hash.merge( k => v.generateHash )  })
-   @objects.merge!(@PBXSourcesBuildPhases.reduce({}){ |hash, (k, v)| hash.merge( k => v.generateHash )  })
-   @objects.merge!(@PBXNativeTargets.reduce({}){ |hash, (k, v)| hash.merge( k => v.generateHash )  })
+   @objects.merge!(@targets.reduce({}){ |hash, (k,v)| hash.merge(v.generateHash ) })
    @objects.merge!(@PBXFileReferences.reduce({}){ |hash, (k, v)| hash.merge( k => v.generateHash )  })
    @objects.merge!(@groups.reduce({}){ |hash, (k, v)| hash.merge( k => v.generateHash )  })
    @objects.merge!(@otherObjects)
