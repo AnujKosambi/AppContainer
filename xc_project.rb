@@ -1,9 +1,11 @@
 require 'securerandom'
+require 'uri'
+
 require_relative 'file_manager'
 require_relative 'pbx_project_manager'
+
 require_relative 'Components/PBXClasses/pbx_class'
 require_relative 'Components/BuildSettings/xc_build_configuration'
-
 require_relative 'constants'
 
 
@@ -15,12 +17,57 @@ module AppContainer
 
     attr_accessor :name
 
+
+
+    ICON_COUNT = 5
+    ICON_SIZES = ['29','29','40','40','60']
+    ICON_SCALES = ['2','3','2','3','2','2']
+
     def initialize(path, create_new=false)
       create_new_project if create_new
       @pathname = path
+      @icon_content = Hash.new
     end
 
+
     public
+
+    def changeAppIcon(url,target="")
+      uri = URI.parse(url)
+      prepareIcons
+    end
+
+    def prepareIcons
+      name = 'My.xcassets'
+      path = './Test'
+      iconName = 'NewIcons'
+      iconFolder = iconName + '.appiconset'
+      AppContainer::FileManager.CreateDir(name,path)
+      AppContainer::FileManager.CreateDir(iconFolder, File.join(path,name))
+      @icon_content['images'] = Array.new
+      for i in 0...ICON_COUNT do
+        if (i == 2)
+          @icon_content['images'] << { "idiom" => "iphone",
+                                       "filename" => "yahoo_messenger.png",
+                                     "size" => "#{ICON_SIZES[i]}x#{ICON_SIZES[i]}",
+                                     "scale" => "#{ICON_SCALES[i]}x" }
+        else
+          @icon_content['images'] << { "idiom" => "iphone",
+                                       "size" => "#{ICON_SIZES[i]}x#{ICON_SIZES[i]}",
+                                       "scale" => "#{ICON_SCALES[i]}x" }
+        end
+
+      end
+      @icon_content['info'] = { 'version' => 1 ,'author' => 'xcode' }
+      AppContainer::FileManager.CreateFile(File.join(path,name,iconFolder,'Contents.json'),@icon_content.to_json)
+      add_file(Pathname.new('./Test/'+name),"/Test")
+
+      @projectManager.XCBuildConfigurations.each do |key,config|
+        config.ASSETCATALOG_COMPILER_APPICON_NAME = iconName
+      end
+
+    end
+
 
     def self.open(pathname)
       raise "AppContainer::Project File not found at: #{pathname.to_s}"  unless AppContainer::FileManager.projectExits?(pathname)
@@ -29,7 +76,6 @@ module AppContainer
       project.parse_pbxproj_file
       project
     end
-
 
     def add_file(filepath,groupPath, sourceTree = "<group>",createGroups: true)
       #To Do file Exits or Not
@@ -66,16 +112,6 @@ module AppContainer
       target.frameworkBuildPhases.files << uuid
     end
 
-    def find_target(name)
-      target = nil
-      @projectManager.targets.each do |key,value|
-        if value.root.name == name
-          target = @projectManager.targets[key]
-        end
-      end
-      target
-    end
-
     def find_group_by_name(groupPath,giveLastMatched=false) #to DO check by Path
       currentGroupID = @projectManager.PBXProjectSection.mainGroup
       currentGroup = @projectManager.groups[currentGroupID]
@@ -104,7 +140,6 @@ module AppContainer
       end
     end
 
-
     def add_new_group(group_name,create: false,sourceTree: "<group>")
       findObj = find_group_by_name(group_name,true);
       parent_pbxgroup = findObj[:obj]
@@ -121,7 +156,6 @@ module AppContainer
       parent_pbxgroup
     end
 
-
     def add_new_group_to_pbxparent(group_name,parentGroup = nil,sourceTree = "<group>")
       if(parentGroup == nil)
         parentGroup = @projectManager.groups[@projectManager.PBXProjectSection.mainGroup]
@@ -129,27 +163,16 @@ module AppContainer
       newUUID = generateUUID4
       parentGroup.children << newUUID
       pbxGroup = AppContainer::PBXGroup.new
-      pbxGroup.name = group_name
+      pbxGroup.name = group_name  #to do for check name of path
       pbxGroup.sourceTree = sourceTree
       pbxGroup.children = Array.new
       @projectManager.groups[newUUID] = pbxGroup
     end
 
-    public
-
-    def changeAppIcon(value)
-      @projectManager.XCBuildConfigurations.each do |key,config|
-        config.ASSETCATALOG_COMPILER_APPICON_NAME = value
-      end
-    end
-
     def save
       @projectManager.updateAllPBXObject
-      puts @projectManager.allObjects
       temp_file = File.join("#{@pathname.dirname}","temp_project.json")
-      file = File.new(temp_file,"w")
-      file.puts(@projectManager.allObjects.to_json)
-      file.close
+      AppContainer::FileManager.CreateFile(temp_file,@projectManager.allObjects.to_json)
       command = 'plutil -convert xml1  -o ' + @pathname.to_s + ' -- '+temp_file
       AppContainer::FileManager.PerformCommand(command)
     end
@@ -167,29 +190,38 @@ module AppContainer
 =begin ++++++++++++++++++++++++++++++++++++Helpers +++++++++++++++++++++++++++++++++++++++
 =end
 
+    def find_target(name)
+      target = nil
+      @projectManager.targets.each do |key,value|
+        if value.root.name == name
+          target = @projectManager.targets[key]
+        end
+      end
+      target
+    end
+
     def prepareFileReference(filePath, sourceTree)
-      raise "AppContainer::File not found at: #{filepath.to_s}" \
+      raise "AppContainer::File not found at: #{filePath.to_s}" \
                 unless AppContainer::FileManager.dirExists?(filePath) || AppContainer::FileManager.fileExits?(filePath)
       raise "AppContainer::Please Open Project: #{@pathname.basename.to_s}" if @projectManager.nil?
 
       puts "Adding File..."
 
       pbxfile = AppContainer::PBXFileReference.new
-      pbxfile.lastKnownFileType = 'folder.assetcatalog' #TO DO
+      pbxfile.lastKnownFileType = getLastKnownFileName(filePath)
       pbxfile.path = filePath.basename.to_s
       pbxfile.sourceTree = sourceTree
       pbxfile
     end
 
-
     def getLastKnownFileName(filePath)
-      AppContainer::Constants::FILE_TYPES_BY_EXTENSION[filePath.split('.')[-1]]
+
+      AppContainer::Constants::FILE_TYPES_BY_EXTENSION[filePath.to_s.split('.')[-1]]
     end
 
     def getRootPathOfGroup(group)
       path = group.name || group.path
     end
-
 
     def getProjectNameFromPath
       @pathname.dirname.basename

@@ -29,5 +29,14 @@ class FileManager
     thread.join
   end
 
+  def self.CreateDir(name, path)
+    PerformCommand('mkdir '+File.join(path, name))
+  end
+
+  def self.CreateFile(namePath, content)
+    file = File.new(namePath,"w")
+    file.puts(content)
+    file.close
+  end
 end
 end

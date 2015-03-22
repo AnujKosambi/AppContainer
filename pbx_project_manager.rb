@@ -25,6 +25,7 @@ class PBXProjectManager
   attr_accessor :otherObjects
   attr_accessor :root_object
   attr_accessor :groups
+  attr_accessor :assetcatalogs
 
   attr_accessor :objects
   attr_accessor :rootObject
@@ -34,7 +35,6 @@ class PBXProjectManager
 
   def initialize(path)
     @pathname = path
-    puts @pathname
   end
 
   def fetch
@@ -59,8 +59,8 @@ class PBXProjectManager
     @groups = Hash.new
     @targets = Hash.new
     @otherObjects = Hash.new
+    @assetcatalogs = Array.new
 
-    puts @objects.count
     fetchAllPBXObject
 
   end
@@ -87,7 +87,9 @@ class PBXProjectManager
           @groups[key] = AppContainer::PBXGroup.new(value)
         when "PBXFileReference"
           @PBXFileReferences[key] = AppContainer::PBXFileReference.new(value)
-
+          if (@PBXFileReferences[key].lastKnownFileType == AppContainer::Constants::FILE_TYPES_BY_EXTENSION['xcassets'])
+            @assetcatalogs << @PBXFileReferences[key]
+          end
 
         when "PBXResourcesBuildPhase"
         when "PBXFrameworksBuildPhase"
@@ -107,7 +109,9 @@ class PBXProjectManager
           @otherObjects[key] = value
       end
     end
+
     prepareTargets
+
   end
 
   def prepareTargets
