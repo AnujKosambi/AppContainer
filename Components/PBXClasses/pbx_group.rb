@@ -3,17 +3,17 @@ module AppContainer
 
 class PBXGroup < AbstractObject
 
-  attr_accessor :sourceTree
-  attr_accessor :name
-  attr_accessor :children
-  attr_accessor :path
+  Fields = ['sourceTree',
+            'name',
+            'children',
+            'path']
 
   def initialize(hash={})
     super(self)
-    @children = hash['children']
-    @name = hash['name']
-    @path = hash['path']
-    @sourceTree = hash['sourceTree']
+    Fields.each do |attr|
+      self.class.send(:attr_accessor,attr)
+      instance_variable_set('@'+attr,hash[attr])
+    end
   end
 
 end

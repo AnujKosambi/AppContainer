@@ -3,7 +3,7 @@ require 'rubygems'
 
 require_relative 'file_manager'
 require_relative 'Components/PBXClasses/pbx_class'
-
+require_relative  'Components/BuildSettings/build_settings'
 
 module AppContainer
 class PBXProjectManager
@@ -19,14 +19,11 @@ class PBXProjectManager
   attr_accessor :PBXFileReferences
   attr_accessor :PBXSourcesBuildPhases
   attr_accessor :XCBuildConfigurations
+  attr_accessor :XCConfigurationLists
 
   attr_accessor :targets
-
-
   attr_accessor :otherObjects
   attr_accessor :root_object
-
-
   attr_accessor :groups
 
   attr_accessor :objects
@@ -55,9 +52,9 @@ class PBXProjectManager
 
     @PBXBuildFiles = Hash.new
     @PBXFileReferences  = Hash.new
-    @PBXNativeTargets = Hash.new
     @PBXSourcesBuildPhases = Hash.new
     @XCBuildConfigurations = Hash.new
+    @XCConfigurationLists = Hash.new
 
     @groups = Hash.new
     @targets = Hash.new
@@ -82,6 +79,7 @@ class PBXProjectManager
       case value['isa']
         when "PBXBuildFile"
           @PBXBuildFiles[key] = AppContainer::PBXBuildFile.new(value)
+
         when "PBXProject"
           @PBXProjectSection = AppContainer::PBXProject.new(value)
           @projectUUID = key
@@ -89,14 +87,20 @@ class PBXProjectManager
           @groups[key] = AppContainer::PBXGroup.new(value)
         when "PBXFileReference"
           @PBXFileReferences[key] = AppContainer::PBXFileReference.new(value)
+
+
         when "PBXResourcesBuildPhase"
         when "PBXFrameworksBuildPhase"
         when "PBXSourcesBuildPhase"
         when "PBXNativeTarget"
           @targets[key] = AppContainer::BuildPhases.new(key,value)
+
         when "XCBuildConfiguration"
           @XCBuildConfigurations[key] = AppContainer::XCBuildConfiguration.new(value)
           @XCBuildConfigurations[key].prepare_method
+        when "XCConfigurationList"
+          @XCConfigurationLists[key] = AppContainer::XCConfigurationList.new(value)
+
         when nil
           raise "PBXObject is not Vaild #{key}:#{value}"
         else
@@ -134,6 +138,7 @@ class PBXProjectManager
    @objects.merge!(@PBXFileReferences.reduce({}){ |hash, (k, v)| hash.merge( k => v.generateHash )  })
    @objects.merge!(@groups.reduce({}){ |hash, (k, v)| hash.merge( k => v.generateHash )  })
    @objects.merge!(@XCBuildConfigurations.reduce({}){ |hash, (k,v)| hash.merge(k => v.generateHash ) })
+   @objects.merge!(@XCConfigurationLists.reduce({}){ |hash, (k, v)| hash.merge( k => v.generateHash )  })
    @objects.merge!(@otherObjects)
 
 

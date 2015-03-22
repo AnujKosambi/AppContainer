@@ -15,6 +15,7 @@ module AppContainer
     end
 
     def prepare_method
+
       attributes = [ 'ASSETCATALOG_COMPILER_APPICON_NAME',
                      'INFOPLIST_FILE',
                      'INSTALL_PATH',
