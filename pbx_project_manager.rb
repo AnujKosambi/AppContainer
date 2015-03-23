@@ -39,7 +39,7 @@ class PBXProjectManager
 
   def fetch
     convertToJSON
-    @file = AppContainer::FileManager.read(@json_pathname)
+    @file = AppContainer::FileManager.OpenRead(@json_pathname)
     @content = @file.read
     hash = JSON[@content]
 
@@ -61,6 +61,7 @@ class PBXProjectManager
     @otherObjects = Hash.new
     @assetcatalogs = Array.new
 
+    @file.close
     fetchAllPBXObject
 
   end
@@ -87,7 +88,7 @@ class PBXProjectManager
           @groups[key] = AppContainer::PBXGroup.new(value)
         when "PBXFileReference"
           @PBXFileReferences[key] = AppContainer::PBXFileReference.new(value)
-          if (@PBXFileReferences[key].lastKnownFileType == AppContainer::Constants::FILE_TYPES_BY_EXTENSION['xcassets'])
+          if (@PBXFileReferences[key].lastKnownFileType == $FILE_TYPES_BY_EXTENSION['xcassets'])
             @assetcatalogs << @PBXFileReferences[key]
           end
 

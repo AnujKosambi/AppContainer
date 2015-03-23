@@ -1,6 +1,7 @@
 require_relative 'xc_project'
 require 'cocoapods'
 require 'pathname'
+require_relative 'PropertyFile/property_reader'
 
 class Run
   attr_accessor :main_project
@@ -17,11 +18,10 @@ class Run
     @scheme_name = ARGV[1]
     full_access_path = File.join(@main_project_path,@scheme_name+".xcodeproj","project.pbxproj")
     project = AppContainer::XCProject.open(Pathname.new(full_access_path))
-
-    project.add_new_group("Test/OHH",create: true)
-    project.add_file(Pathname.new('/Users/anujkosambi/Mobile_Library/Test/Test/ViewController.m'),"/Test/ANUJ/Kosambi")
     project.changeAppIcon("AppIcon")
     project.save
+
+    AppContainer::PropertyReader.Open('Property.spr')
   end
 end
 

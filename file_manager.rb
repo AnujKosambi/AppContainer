@@ -18,7 +18,7 @@ class FileManager
     return false
   end
 
-  def self.read(path)
+  def self.OpenRead(path)
     File.new(path,'r')
   end
 
@@ -29,8 +29,12 @@ class FileManager
     thread.join
   end
 
-  def self.CreateDir(name, path)
+  def self.CreateDir(path, *name)
     PerformCommand('mkdir '+File.join(path, name))
+  end
+
+  def self.TouchDir(path, *name)
+    CreateDir(path, *name) unless dirExists?(File.join(path,name))
   end
 
   def self.CreateFile(namePath, content)
@@ -38,5 +42,7 @@ class FileManager
     file.puts(content)
     file.close
   end
+
+
 end
 end

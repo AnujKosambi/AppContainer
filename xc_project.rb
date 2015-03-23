@@ -7,6 +7,7 @@ require_relative 'pbx_project_manager'
 require_relative 'Components/PBXClasses/pbx_class'
 require_relative 'Components/BuildSettings/xc_build_configuration'
 require_relative 'constants'
+require_relative 'app_icon'
 
 
 module AppContainer
@@ -17,11 +18,6 @@ module AppContainer
 
     attr_accessor :name
 
-
-
-    ICON_COUNT = 5
-    ICON_SIZES = ['29','29','40','40','60']
-    ICON_SCALES = ['2','3','2','3','2','2']
 
     def initialize(path, create_new=false)
       create_new_project if create_new
@@ -34,40 +30,41 @@ module AppContainer
 
     def changeAppIcon(url,target="")
       uri = URI.parse(url)
-      prepareIcons
+      prepareIcons('Images','AppIcons')
     end
 
-    def prepareIcons
-      name = 'My.xcassets'
+    def prepareIcons(xcassets, iconSetName)
+      name = xcassets + '.xcassets'
       path = './Test'
-      iconName = 'NewIcons'
-      iconFolder = iconName + '.appiconset'
-      AppContainer::FileManager.CreateDir(name,path)
-      AppContainer::FileManager.CreateDir(iconFolder, File.join(path,name))
-      @icon_content['images'] = Array.new
-      for i in 0...ICON_COUNT do
-        if (i == 2)
-          @icon_content['images'] << { "idiom" => "iphone",
-                                       "filename" => "yahoo_messenger.png",
-                                     "size" => "#{ICON_SIZES[i]}x#{ICON_SIZES[i]}",
-                                     "scale" => "#{ICON_SCALES[i]}x" }
-        else
-          @icon_content['images'] << { "idiom" => "iphone",
-                                       "size" => "#{ICON_SIZES[i]}x#{ICON_SIZES[i]}",
-                                       "scale" => "#{ICON_SCALES[i]}x" }
-        end
+      iconFolder = iconSetName + '.appiconset'
 
+      AppContainer::FileManager.TouchDir(path, name)
+      AppContainer::FileManager.TouchDir(path, name, iconFolder)
+
+      contentIconArray = AppContainer::AppIcon.CreateStandardIcons
+
+      @icon_content['images'] = Array.new
+
+      for i in 0...contentIconArray.count do
+        iconObj = contentIconArray[i]
+        if (i == 7)
+          iconObj.filename = "yahoo_messenger_120.png"
+        end
+        @icon_content['images'] << AppIcon.GetHash(iconObj)
       end
+
       @icon_content['info'] = { 'version' => 1 ,'author' => 'xcode' }
+
       AppContainer::FileManager.CreateFile(File.join(path,name,iconFolder,'Contents.json'),@icon_content.to_json)
-      add_file(Pathname.new('./Test/'+name),"/Test")
+      uuid = add_file(Pathname.new('./Test/'+name),"/Test")
 
       @projectManager.XCBuildConfigurations.each do |key,config|
-        config.ASSETCATALOG_COMPILER_APPICON_NAME = iconName
+        config.ASSETCATALOG_COMPILER_APPICON_NAME = iconSetName
       end
 
-    end
+      add_build_file(uuid,'Test',AppContainer::BuildPhases.TYPES.sources)
 
+    end
 
     def self.open(pathname)
       raise "AppContainer::Project File not found at: #{pathname.to_s}"  unless AppContainer::FileManager.projectExits?(pathname)
@@ -91,7 +88,8 @@ module AppContainer
              raise "AppContainer::Group Not Found #{groupPath}"
       end
       group.children << uuid
-      add_build_file(uuid,'Test')
+      uuid
+     # TO DO adding build file
     end
 
     def add_file_to_group(filePath,group, sourceTree = "<group>")
@@ -101,15 +99,15 @@ module AppContainer
       group.children << uuid
     end
 
-    def add_build_file(fileRef,target) #To Do  Check file action and source resource and framework
+    def add_build_file(fileRef,target,type) #To Do  Check file action and source resource and framework
       pbx_buildfile = AppContainer::PBXBuildFile.new
       pbx_buildfile.fileRef = fileRef
       uuid = generateUUID4
       @projectManager.PBXBuildFiles[uuid] = pbx_buildfile
-      pbx_buildfile.settings = AppContainer::Constants::BUILD_FILE_OPTIONAL
+      pbx_buildfile.settings = $BUILD_FILE_OPTIONAL
       target = find_target(target)
-
-      target.frameworkBuildPhases.files << uuid
+      buildPhases =  target.method(type).call
+      buildPhases.files << uuid
     end
 
     def find_group_by_name(groupPath,giveLastMatched=false) #to DO check by Path
@@ -190,6 +188,8 @@ module AppContainer
 =begin ++++++++++++++++++++++++++++++++++++Helpers +++++++++++++++++++++++++++++++++++++++
 =end
 
+    private
+
     def find_target(name)
       target = nil
       @projectManager.targets.each do |key,value|
@@ -215,17 +215,18 @@ module AppContainer
     end
 
     def getLastKnownFileName(filePath)
-
-      AppContainer::Constants::FILE_TYPES_BY_EXTENSION[filePath.to_s.split('.')[-1]]
+     $FILE_TYPES_BY_EXTENSION[filePath.to_s.split('.')[-1]]
     end
 
     def getRootPathOfGroup(group)
       path = group.name || group.path
     end
 
+    public
     def getProjectNameFromPath
       @pathname.dirname.basename
     end
+    private
 
     def generateUUID4
       uuid = SecureRandom.uuid.to_s
@@ -234,4 +235,6 @@ module AppContainer
 
 
   end
+
+
 end

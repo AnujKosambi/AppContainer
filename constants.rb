@@ -1,6 +1,6 @@
 module AppContainer
   class Constants
-    ::FILE_TYPES_BY_EXTENSION = {
+    $FILE_TYPES_BY_EXTENSION = {
         'a'           => 'archive.ar',
         'app'         => 'wrapper.application',
         'bundle'      => 'wrapper.plug-in',
@@ -23,9 +23,9 @@ module AppContainer
         'xib'         => 'file.xib',
     }.freeze
 
-    ::BUILD_FILE_OPTIONAL  = { 'ATTRIBUTES' => ['Weak'] }.freeze
-    ::BUILD_FILE_REQUIRED = { 'ATTRIBUTES' => ['Required'] }.freeze
-    ::  HEADER_FILES_EXTENSIONS = %w(.h .hh .hpp .ipp).freeze
+    $BUILD_FILE_OPTIONAL  = { 'ATTRIBUTES' => ['Weak'] }.freeze
+    $BUILD_FILE_REQUIRED = { 'ATTRIBUTES' => ['Required'] }.freeze
+    $HEADER_FILES_EXTENSIONS = %w(.h .hh .hpp .ipp).freeze
 
   end
 end

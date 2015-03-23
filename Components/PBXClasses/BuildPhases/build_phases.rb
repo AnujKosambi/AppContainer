@@ -17,6 +17,12 @@ module AppContainer
     attr_accessor :addResourcesBuildPhases
     attr_accessor :root
 
+    TYPES = Struct.new(:sources,:resources,:frameworks)
+
+    def self.TYPES
+      t = TYPES.new(:sourcesBuildPhases,:frameworks,:resourcesBuildPhases)
+      t
+    end
 
     def initialize(key,targetHash={})
       @key = key
