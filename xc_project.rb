@@ -7,7 +7,7 @@ require_relative 'pbx_project_manager'
 require_relative 'Components/PBXClasses/pbx_class'
 require_relative 'Components/BuildSettings/xc_build_configuration'
 require_relative 'constants'
-require_relative 'app_icon'
+require_relative 'Icon/app_icon'
 
 
 module AppContainer
@@ -28,12 +28,7 @@ module AppContainer
 
     public
 
-    def changeAppIcon(url,target="")
-      uri = URI.parse(url)
-      prepareIcons('Images','AppIcons')
-    end
-
-    def prepareIcons(xcassets, iconSetName)
+    def addAppIcons(xcassets, iconSetName)
       name = xcassets + '.xcassets'
       path = './Test'
       iconFolder = iconSetName + '.appiconset'
@@ -41,15 +36,21 @@ module AppContainer
       AppContainer::FileManager.TouchDir(path, name)
       AppContainer::FileManager.TouchDir(path, name, iconFolder)
 
-      contentIconArray = AppContainer::AppIcon.CreateStandardIcons
+      contentIconArray = AppContainer::AppIcon.GetIconSet
 
       @icon_content['images'] = Array.new
 
-      for i in 0...contentIconArray.count do
+      originalIconLocation = Pathname.new(AppContainer::PropertyReader.Properties['ICON_FOLDER'])
+      uri = URI.parse(originalIconLocation.to_s)
+      puts uri.scheme
+
+      pngFiles =  Dir[File.join(originalIconLocation.to_s,'*.*')].select{ |i| i[/\.png?$/i] }
+
+      pngFiles.each do |filename|
+        AppContainer::FileManager.PerformCommand('cp '+filename+' '+File.join(path,name,iconFolder))
+      end
+      for i in 0...AppContainer::AppIcon.GetIconSet.count
         iconObj = contentIconArray[i]
-        if (i == 7)
-          iconObj.filename = "yahoo_messenger_120.png"
-        end
         @icon_content['images'] << AppIcon.GetHash(iconObj)
       end
 

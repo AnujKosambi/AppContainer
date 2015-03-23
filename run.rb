@@ -1,7 +1,9 @@
 require_relative 'xc_project'
 require 'cocoapods'
 require 'pathname'
+
 require_relative 'PropertyFile/property_reader'
+require_relative 'ExternalLibs/external_libs'
 
 class Run
   attr_accessor :main_project
@@ -18,10 +20,12 @@ class Run
     @scheme_name = ARGV[1]
     full_access_path = File.join(@main_project_path,@scheme_name+".xcodeproj","project.pbxproj")
     project = AppContainer::XCProject.open(Pathname.new(full_access_path))
-    project.changeAppIcon("AppIcon")
+    #project.add_new_group('/Test/ANUJ/P/KOSAMBI',create: true)
+    AppContainer::PropertyReader.Open('Property.spr')
+    project.addAppIcons("Images","Sprinklr")
     project.save
 
-    AppContainer::PropertyReader.Open('Property.spr')
+
   end
 end
 
