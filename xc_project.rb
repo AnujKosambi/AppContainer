@@ -21,7 +21,6 @@ module AppContainer
 
 
     def initialize(path, create_new=false)
-      create_new_project if create_new
       @pathname = path
       @icon_content = Hash.new
     end
@@ -70,7 +69,7 @@ module AppContainer
     def self.open(pathName,create:false)
       projectFilePath = File.join(pathName,"project.pbxproj")
       unless  AppContainer::FileManager.projectExits?(projectFilePath)
-        if create
+        unless create
           raise "AppContainer::Project Files not found at: #{pathName.to_s}"
         else
           AppContainer::FileManager.TouchDir(pathName)
@@ -79,14 +78,15 @@ module AppContainer
       end
       project = new(Pathname.new(projectFilePath.to_s), create)
       puts project.getProjectNameFromPath
-      project.parse_pbxproj_file
+      project.parse_pbxproj_file(create)
+      project.create_new_project if create
       project
     end
 
     def add_file(filepath, groupPath, sourceTree = "<group>",createGroups: true)
       #To Do file Exits or Not
       pbxfile = prepareFileReference(filepath,sourceTree)
-      uuid = generateUUID4
+      uuid =  AppContainer::XCProject.generateUUID4
       @projectManager.PBXFileReferences[uuid] = pbxfile
       group = find_group_by_name(groupPath)
       if group
@@ -111,7 +111,7 @@ module AppContainer
     def add_build_file(fileRef, target, type) #To Do  Check file action and source resource and framework
       pbx_buildfile = AppContainer::PBXBuildFile.new
       pbx_buildfile.fileRef = fileRef
-      uuid = generateUUID4
+      uuid = AppContainer::XCProject.generateUUID4
       @projectManager.PBXBuildFiles[uuid] = pbx_buildfile
       pbx_buildfile.settings = $BUILD_FILE_OPTIONAL
       target = find_target(target)
@@ -167,7 +167,7 @@ module AppContainer
       if(parentGroup == nil)
         parentGroup = @projectManager.groups[@projectManager.PBXProjectSection.mainGroup]
       end
-      newUUID = generateUUID4
+      newUUID = AppContainer::XCProject.generateUUID4
       parentGroup.children << newUUID
       pbxGroup = AppContainer::PBXGroup.new
       pbxGroup.name = group_name  #to do for check name of path
@@ -178,7 +178,7 @@ module AppContainer
 
     def save
       @projectManager.updateAllPBXObject
-      temp_file = File.join(AppContainer::PropertyReader.Properties['TEMP_FOLDER'],'temp_pbx_project.json')
+      temp_file = File.join(AppContainer::PropertyReader.Properties['TEMP_FOLDER'],$APPCONTAINER_PBXPROJ_JSON)
       AppContainer::FileManager.CreateFileFromContent(temp_file,@projectManager.allObjects.to_json)
       command = 'plutil -convert xml1  -o ' + @pathname.to_s + ' -- '+temp_file
       AppContainer::FileManager.PerformCommand(command)
@@ -186,15 +186,41 @@ module AppContainer
 
     def create_new_project
       puts "Creating #{@name} Project File..."
-
-
+      main_group_uuid = AppContainer::XCProject.generateUUID4
+      pbx_project = AppContainer::PBXProject.new
+      pbx_project.compatibilityVersion =  "Xcode 3.2"
+      pbx_project.developmentRegion = "English"
+      pbx_project.hasScannedForEncodings = 0
+      pbx_project.knownRegions = ['en','Base']
+      pbx_project.mainGroup = main_group_uuid
+      pbx_project.productRefGroup = main_group_uuid
+      pbx_project.projectDirPath = ""
+      pbx_project.projectRoot = ""
+      pbx_project.targets = []
+      pbx_project.buildConfigurationList = Array.new
+      buildSettings_file =  AppContainer::FileManager.OpenRead(AppContainer::PropertyReader.Properties['BUIDSETTING_DEBUG'])
+      hash = { 'buildSettings' => JSON[buildSettings_file.read()] }
+      xc_build_config = AppContainer::XCBuildConfiguration.new(hash)
+      xc_build_config.name = "Debug"
+      configs = Array.new
+      configs << xc_build_config
+      @projectManager.createPBXPROJ(pbx_project,configs)
     end
 
-    def parse_pbxproj_file
+    def parse_pbxproj_file(create)
       @projectManager = AppContainer::PBXProjectManager.new(@pathname)
-      @projectManager.fetch
+      @projectManager.fetch unless create
     end
 
+    public
+    def getProjectNameFromPath
+      @pathname.dirname.basename
+    end
+
+    def self.generateUUID4
+      uuid = SecureRandom.uuid.to_s
+      uuid = uuid.split("-")[1..-1].join().upcase
+    end
 
 =begin ++++++++++++++++++++++++++++++++++++Helpers +++++++++++++++++++++++++++++++++++++++
 =end
@@ -232,18 +258,6 @@ module AppContainer
     def getRootPathOfGroup(group)
       path = group.name || group.path
     end
-
-    public
-    def getProjectNameFromPath
-      @pathname.dirname.basename
-    end
-    private
-
-    def generateUUID4
-      uuid = SecureRandom.uuid.to_s
-      uuid = uuid.split("-")[1..-1].join().upcase
-    end
-
 
   end
 

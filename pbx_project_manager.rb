@@ -5,6 +5,8 @@ require_relative 'file_manager'
 require_relative 'Components/PBXClasses/pbx_class'
 require_relative  'Components/BuildSettings/build_settings'
 require_relative 'PropertyFile/property_reader'
+require_relative 'constants'
+require_relative 'xc_project'
 
 module AppContainer
 class PBXProjectManager
@@ -34,8 +36,15 @@ class PBXProjectManager
 
   attr_accessor :projectUUID
 
+  public
   def initialize(path)
     @pathname = path
+    @allObjects = Hash.new
+    @rootObject = Hash.new
+    @objects = Hash.new
+    @classes = Hash.new
+    @archiveVersion = Hash.new
+    @objectVersion = Hash.new
   end
 
   def fetch
@@ -68,7 +77,8 @@ class PBXProjectManager
   end
 
   def convertToJSON
-    output_file = File.join(AppContainer::PropertyReader.Properties['TEMP_FOLDER'],'temp_pbx_project.json')
+    output_file = File.join(AppContainer::PropertyReader.Properties['TEMP_FOLDER'],$APPCONTAINER_PBXPROJ_JSON)
+    AppContainer::FileManager.PerformCommand("rm #{output_file}") if AppContainer::FileManager.fileExits?(output_file)
     command = 'plutil -convert json -r -o '+output_file+' -- '+@pathname.to_s
     output_obj = AppContainer::FileManager.PerformCommand(command)
     raise "AppContainer::project.pbxproj is not  converted toJSON successfully" unless  AppContainer::FileManager.fileExits?(output_file)
@@ -157,13 +167,24 @@ class PBXProjectManager
     @allObjects['archiveVersion'] = @archiveVersion
   end
 
-  # def createPBXPROJ(archiveVersion:1,objectVersion:46,project)
-  #   uuid = SecureRandom.uuid.to_s
-  #   @rootObject = uuid.split("-")[1..-1].join().upcase
-  #   @objects[uuid] =  project
-  #   @objects[project.mainGroup] = AppContainer::PBXGroup.new
-  #   @objects[project.buildConfigurationList] = AppContainer::XCConfigurationList.new
-  #   setAllPBXObjects
-  # end
+  def createPBXPROJ(project,buildConfigs,archiveVersion:1,objectVersion:46)
+    initInstanceVariable
+    @objects[AppContainer::XCProject.generateUUID4] =  project
+    @archiveVersion = archiveVersion
+    @objectVersion = objectVersion
+    mainGroup =  AppContainer::PBXGroup.new
+    mainGroup.sourceTree = "<group>"
+    mainGroup.children = Array.new
+    @groups[project.mainGroup] = mainGroup
+    @rootObject = project.mainGroup
+    buildConfigs.each do |xcbuildconfig|
+      uuid = AppContainer::XCProject.generateUUID4
+      project.buildConfigurationList << uuid
+      @objects[uuid] = xcbuildconfig
+    end
+    @PBXProjectSection = project
+    @projectUUID = project.mainGroup
+    setAllPBXObjects
+  end
 end
 end

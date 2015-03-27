@@ -40,7 +40,11 @@ class FileManager
   end
 
   def self.TouchFile(path, *name)
-    file = File.new(File.join(path.name),"w+")
+    if name.count > 0
+      file = File.new(File.join(path,name),"w+")
+    else
+      file = File.new(path,"w+")
+    end
     file
   end
 

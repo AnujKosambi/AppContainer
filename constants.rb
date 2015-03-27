@@ -26,6 +26,6 @@ module AppContainer
     $BUILD_FILE_OPTIONAL  = { 'ATTRIBUTES' => ['Weak'] }.freeze
     $BUILD_FILE_REQUIRED = { 'ATTRIBUTES' => ['Required'] }.freeze
     $HEADER_FILES_EXTENSIONS = %w(.h .hh .hpp .ipp).freeze
-
+    $APPCONTAINER_PBXPROJ_JSON = 'app_container_temp_pbx_project.json'
   end
 end
