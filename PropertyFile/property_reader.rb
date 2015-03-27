@@ -13,7 +13,7 @@ module AppContainer
     end
 
     def self.Properties
-      @@properties
+       @@properties
     end
 
   end

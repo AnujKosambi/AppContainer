@@ -29,7 +29,7 @@ class AppIcon
     hash
   end
 
-  def self.GetIconFromSize(size,filename)
+  def self.GetIconFromSize(size, filename)
 
     case size
       when 80
@@ -48,12 +48,10 @@ class AppIcon
         Icon.new('29','iphone','2',filename.basename)
       when 87
         Icon.new('29','iphone','3',filename.basename)
-
     end
   end
 
-  def self.GetIconSet()
-    pathName = Pathname.new(AppContainer::PropertyReader.Properties['ICON_FOLDER'])
+  def self.GetIconSet(pathName)
     iconSets = Array.new
     @folderPathname = pathName
     raise "Folder does Not Exists #{pathName}" unless AppContainer::FileManager.dirExists?(pathName.to_s)

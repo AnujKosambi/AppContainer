@@ -6,6 +6,7 @@ require_relative 'pbx_project_manager'
 
 require_relative 'Components/PBXClasses/pbx_class'
 require_relative 'Components/BuildSettings/xc_build_configuration'
+require_relative 'PropertyFile/property_reader'
 require_relative 'constants'
 require_relative 'Icon/app_icon'
 
@@ -25,39 +26,38 @@ module AppContainer
       @icon_content = Hash.new
     end
 
-
     public
 
-    def addAppIcons(xcassets, iconSetName)
+    def addAppIcons(xcassets, iconSetName,path)
       name = xcassets + '.xcassets'
-      path = './Test'
       iconFolder = iconSetName + '.appiconset'
 
       AppContainer::FileManager.TouchDir(path, name)
       AppContainer::FileManager.TouchDir(path, name, iconFolder)
 
-      contentIconArray = AppContainer::AppIcon.GetIconSet
-
       @icon_content['images'] = Array.new
 
-      originalIconLocation = Pathname.new(AppContainer::PropertyReader.Properties['ICON_FOLDER'])
-      uri = URI.parse(originalIconLocation.to_s)
-      puts uri.scheme
+      #TO DO URI PART
+      originalIconURI = URI.parse(AppContainer::PropertyReader.Properties['ICON_FOLDER'].to_s)
+
+      originalIconLocation = Pathname.new(AppContainer::PropertyReader.Properties['ICON_FOLDER'].to_s)
+
+      contentIconArray = AppContainer::AppIcon.GetIconSet(originalIconLocation)
 
       pngFiles =  Dir[File.join(originalIconLocation.to_s,'*.*')].select{ |i| i[/\.png?$/i] }
 
       pngFiles.each do |filename|
         AppContainer::FileManager.PerformCommand('cp '+filename+' '+File.join(path,name,iconFolder))
       end
-      for i in 0...AppContainer::AppIcon.GetIconSet.count
+      for i in 0...contentIconArray.count
         iconObj = contentIconArray[i]
         @icon_content['images'] << AppIcon.GetHash(iconObj)
       end
 
       @icon_content['info'] = { 'version' => 1 ,'author' => 'xcode' }
 
-      AppContainer::FileManager.CreateFile(File.join(path,name,iconFolder,'Contents.json'),@icon_content.to_json)
-      uuid = add_file(Pathname.new('./Test/'+name),"/Test")
+      AppContainer::FileManager.CreateFileFromContent(File.join(path,name,iconFolder,'Contents.json'),@icon_content.to_json)
+      uuid = add_file(Pathname.new(File.join(path,name)),path) #TO DO
 
       @projectManager.XCBuildConfigurations.each do |key,config|
         config.ASSETCATALOG_COMPILER_APPICON_NAME = iconSetName
@@ -67,15 +67,23 @@ module AppContainer
 
     end
 
-    def self.open(pathname)
-      raise "AppContainer::Project File not found at: #{pathname.to_s}"  unless AppContainer::FileManager.projectExits?(pathname)
-      project = new(pathname, false)
+    def self.open(pathName,create:false)
+      projectFilePath = File.join(pathName,"project.pbxproj")
+      unless  AppContainer::FileManager.projectExits?(projectFilePath)
+        if create
+          raise "AppContainer::Project Files not found at: #{pathName.to_s}"
+        else
+          AppContainer::FileManager.TouchDir(pathName)
+          AppContainer::FileManager.TouchFile(projectFilePath)
+        end
+      end
+      project = new(Pathname.new(projectFilePath.to_s), create)
       puts project.getProjectNameFromPath
       project.parse_pbxproj_file
       project
     end
 
-    def add_file(filepath,groupPath, sourceTree = "<group>",createGroups: true)
+    def add_file(filepath, groupPath, sourceTree = "<group>",createGroups: true)
       #To Do file Exits or Not
       pbxfile = prepareFileReference(filepath,sourceTree)
       uuid = generateUUID4
@@ -93,14 +101,14 @@ module AppContainer
      # TO DO adding build file
     end
 
-    def add_file_to_group(filePath,group, sourceTree = "<group>")
+    def add_file_to_group(filePath, group, sourceTree = "<group>")
       prepareFileReference(filePath,sourceTree)
       uuid = generateUUID4
       @projectManager.PBXFileReferences[uuid] = pbxfile
       group.children << uuid
     end
 
-    def add_build_file(fileRef,target,type) #To Do  Check file action and source resource and framework
+    def add_build_file(fileRef, target, type) #To Do  Check file action and source resource and framework
       pbx_buildfile = AppContainer::PBXBuildFile.new
       pbx_buildfile.fileRef = fileRef
       uuid = generateUUID4
@@ -170,14 +178,16 @@ module AppContainer
 
     def save
       @projectManager.updateAllPBXObject
-      temp_file = File.join("#{@pathname.dirname}","temp_project.json")
-      AppContainer::FileManager.CreateFile(temp_file,@projectManager.allObjects.to_json)
+      temp_file = File.join(AppContainer::PropertyReader.Properties['TEMP_FOLDER'],'temp_pbx_project.json')
+      AppContainer::FileManager.CreateFileFromContent(temp_file,@projectManager.allObjects.to_json)
       command = 'plutil -convert xml1  -o ' + @pathname.to_s + ' -- '+temp_file
       AppContainer::FileManager.PerformCommand(command)
     end
 
     def create_new_project
-      puts "Creating #{@name} Project File"
+      puts "Creating #{@name} Project File..."
+
+
     end
 
     def parse_pbxproj_file

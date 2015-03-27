@@ -1,9 +1,10 @@
-
+require 'securerandom'
 require 'rubygems'
 
 require_relative 'file_manager'
 require_relative 'Components/PBXClasses/pbx_class'
 require_relative  'Components/BuildSettings/build_settings'
+require_relative 'PropertyFile/property_reader'
 
 module AppContainer
 class PBXProjectManager
@@ -42,36 +43,36 @@ class PBXProjectManager
     @file = AppContainer::FileManager.OpenRead(@json_pathname)
     @content = @file.read
     hash = JSON[@content]
-
     @rootObject = hash['rootObject']
     @objects = hash['objects']
     @objectVersion = hash['objectVersion']
     @classes = hash['classes']
     @archiveVersion = hash['archiveVersion']
     @allObjects = hash
-
-    @PBXBuildFiles = Hash.new
-    @PBXFileReferences  = Hash.new
-    @PBXSourcesBuildPhases = Hash.new
-    @XCBuildConfigurations = Hash.new
-    @XCConfigurationLists = Hash.new
-
-    @groups = Hash.new
-    @targets = Hash.new
-    @otherObjects = Hash.new
-    @assetcatalogs = Array.new
-
+    initInstanceVariable
     @file.close
     fetchAllPBXObject
 
   end
 
+  def initInstanceVariable
+    @PBXBuildFiles = Hash.new
+    @PBXFileReferences  = Hash.new
+    @PBXSourcesBuildPhases = Hash.new
+    @XCBuildConfigurations = Hash.new
+    @XCConfigurationLists = Hash.new
+    @groups = Hash.new
+    @targets = Hash.new
+    @otherObjects = Hash.new
+    @assetcatalogs = Array.new
+  end
+
   def convertToJSON
-    output_file = File.join(@pathname.dirname,'project.json')
+    output_file = File.join(AppContainer::PropertyReader.Properties['TEMP_FOLDER'],'temp_pbx_project.json')
     command = 'plutil -convert json -r -o '+output_file+' -- '+@pathname.to_s
-    AppContainer::FileManager.PerformCommand(command)
+    output_obj = AppContainer::FileManager.PerformCommand(command)
+    raise "AppContainer::project.pbxproj is not  converted toJSON successfully" unless  AppContainer::FileManager.fileExits?(output_file)
     @json_pathname = File.new(Pathname.new(output_file))
-    raise "AppContainer::project.pbxproj is not  converted toJSON successfully" unless  AppContainer::FileManager.fileExits?(@json_pathname)
   end
 
   def fetchAllPBXObject
@@ -135,27 +136,34 @@ class PBXProjectManager
   end
 
   def updateAllPBXObject # To Do optimize
-
-   @objects.clear
-   @objects.merge!({@projectUUID => @PBXProjectSection.generateHash})
-   @objects.merge!(@PBXBuildFiles.reduce({}){ |hash, (k, v)| hash.merge( k => v.generateHash )  })
-   @objects.merge!(@targets.reduce({}){ |hash, (k,v)| hash.merge(v.generateHash ) })
-   @objects.merge!(@PBXFileReferences.reduce({}){ |hash, (k, v)| hash.merge( k => v.generateHash )  })
-   @objects.merge!(@groups.reduce({}){ |hash, (k, v)| hash.merge( k => v.generateHash )  })
-   @objects.merge!(@XCBuildConfigurations.reduce({}){ |hash, (k,v)| hash.merge(k => v.generateHash ) })
-   @objects.merge!(@XCConfigurationLists.reduce({}){ |hash, (k, v)| hash.merge( k => v.generateHash )  })
-   @objects.merge!(@otherObjects)
-
-
-   @allObjects = Hash.new
-   @allObjects['rootObject'] = @rootObject
-   @allObjects['objects'] = @objects
-   @allObjects['objectVersion'] = @objectVersion
-   @allObjects['classes'] = @classes
-   @allObjects['archiveVersion'] = @archiveVersion
+    @objects.clear
+    @objects.merge!({@projectUUID => @PBXProjectSection.generateHash})
+    @objects.merge!(@PBXBuildFiles.reduce({}){ |hash, (k, v)| hash.merge( k => v.generateHash )  })
+    @objects.merge!(@targets.reduce({}){ |hash, (k,v)| hash.merge(v.generateHash ) })
+    @objects.merge!(@PBXFileReferences.reduce({}){ |hash, (k, v)| hash.merge( k => v.generateHash )  })
+    @objects.merge!(@groups.reduce({}){ |hash, (k, v)| hash.merge( k => v.generateHash )  })
+    @objects.merge!(@XCBuildConfigurations.reduce({}){ |hash, (k,v)| hash.merge(k => v.generateHash ) })
+    @objects.merge!(@XCConfigurationLists.reduce({}){ |hash, (k, v)| hash.merge( k => v.generateHash )  })
+    @objects.merge!(@otherObjects)
+    setAllPBXObjects
   end
 
+  def setAllPBXObjects
+    @allObjects = Hash.new
+    @allObjects['rootObject'] = @rootObject
+    @allObjects['objects'] = @objects
+    @allObjects['objectVersion'] = @objectVersion
+    @allObjects['classes'] = @classes
+    @allObjects['archiveVersion'] = @archiveVersion
+  end
 
-
+  # def createPBXPROJ(archiveVersion:1,objectVersion:46,project)
+  #   uuid = SecureRandom.uuid.to_s
+  #   @rootObject = uuid.split("-")[1..-1].join().upcase
+  #   @objects[uuid] =  project
+  #   @objects[project.mainGroup] = AppContainer::PBXGroup.new
+  #   @objects[project.buildConfigurationList] = AppContainer::XCConfigurationList.new
+  #   setAllPBXObjects
+  # end
 end
 end

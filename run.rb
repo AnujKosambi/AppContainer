@@ -18,15 +18,15 @@ class Run
 
     @main_project_path = ARGV[0]
     @scheme_name = ARGV[1]
-    full_access_path = File.join(@main_project_path,@scheme_name+".xcodeproj","project.pbxproj")
-    project = AppContainer::XCProject.open(Pathname.new(full_access_path))
-    #project.add_new_group('/Test/ANUJ/P/KOSAMBI',create: true)
     AppContainer::PropertyReader.Open('Property.spr')
-    project.addAppIcons("Images","Sprinklr")
+    full_dir_path = File.join(@main_project_path,@scheme_name+".xcodeproj")
+    project = AppContainer::XCProject.open(Pathname.new(full_dir_path))
+    project.add_new_group('/Test/ANUJ/P/KOSAMBI',create: true)
+
+    project.addAppIcons("Images","Sprinklr",".")
     project.save
-
-
   end
+
 end
 
 Run.run

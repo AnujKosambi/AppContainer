@@ -7,9 +7,7 @@ module AppContainer
     attr_accessor :settings
 
     def initialize(hash={})
-      super(self)
-      @fileRef = hash['fileRef']
-      @settings = nil
+      super(self,{:Fields => Fields,:Hash => hash})
     end
   end
 end

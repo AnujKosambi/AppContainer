@@ -6,9 +6,4 @@ module AppContainer
   require_relative 'pbx_project'
   require_relative 'pbx_build_file'
   require_relative 'BuildPhases/build_phases'
-
-  class PBXClass
-
-  end
-
 end

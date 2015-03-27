@@ -23,10 +23,12 @@ class FileManager
   end
 
   def self.PerformCommand(command)
+    output = ""
     thread = Thread.new do
-      %x(#{command})
+      output = `#{command}`
     end
     thread.join
+    output
   end
 
   def self.CreateDir(path, *name)
@@ -37,10 +39,19 @@ class FileManager
     CreateDir(path, *name) unless dirExists?(File.join(path,name))
   end
 
-  def self.CreateFile(namePath, content)
-    file = File.new(namePath,"w")
+  def self.TouchFile(path, *name)
+    file = File.new(File.join(path.name),"w+")
+    file
+  end
+
+  def self.CreateFileFromContent(namePath, content)
+    file = File.new(namePath,"w+")
     file.puts(content)
     file.close
+  end
+
+  def self.DownloadFile(uri,downloadLocation)
+
   end
 
 

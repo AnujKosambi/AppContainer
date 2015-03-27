@@ -6,11 +6,6 @@ class PBXResourcesBuildPhase < AppContainer::AbstractObject
             'runOnlyForDeploymentPostprocessing']
 
   def initialize(hash={})
-    super(self)
-    Fields.each do |attr|
-      self.class.send(:attr_accessor,attr)
-      instance_variable_set('@'+attr,hash[attr])
-    end
-    @files = Array.new unless @files
+    super(self,{:Fields => Fields,:Hash => hash})
   end
 end

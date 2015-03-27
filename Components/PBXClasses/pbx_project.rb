@@ -18,11 +18,7 @@ class PBXProject < AbstractObject
 
 
   def initialize(hash={})
-    super(self)
-    Fields.each do |attr|
-      self.class.send(:attr_accessor,attr)
-      instance_variable_set('@'+attr,hash[attr])
-    end
+    super(self,{:Fields => Fields,:Hash => hash})
   end
 
 
