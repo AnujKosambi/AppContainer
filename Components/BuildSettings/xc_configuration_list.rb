@@ -4,7 +4,7 @@ module AppContainer
 
   class XCConfigurationList < AbstractObject
 
-    ::Fields = [
+    Fields = [
       'buildConfigurations',
       'defaultConfigurationIsVisible',
       'defaultConfigurationName'

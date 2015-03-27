@@ -20,9 +20,9 @@ class Run
     @scheme_name = ARGV[1]
     AppContainer::PropertyReader.Open('Property.spr')
     full_dir_path = File.join(@main_project_path,@scheme_name+".xcodeproj")
-    project = AppContainer::XCProject.open(Pathname.new(full_dir_path),create:false)
-    project.add_new_group('/Test/ANUJ/P/KOSAMBI',create: true)
-    project.addAppIcons("Images","Sprinklr",".")
+    project = AppContainer::XCProject.open(Pathname.new(full_dir_path),create:true)
+    #project.add_new_group('/Test/ANUJ/P/KOSAMBI',create: true)
+    #project.addAppIcons("Images","Sprinklr",".")
     project.save
   end
 

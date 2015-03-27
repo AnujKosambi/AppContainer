@@ -169,21 +169,29 @@ class PBXProjectManager
 
   def createPBXPROJ(project,buildConfigs,archiveVersion:1,objectVersion:46)
     initInstanceVariable
-    @objects[AppContainer::XCProject.generateUUID4] =  project
-    @archiveVersion = archiveVersion
-    @objectVersion = objectVersion
+    @projectUUID =  AppContainer::XCProject.generateUUID4
+
+    @objects[@projectUUID] =  project
+    @archiveVersion = "#{archiveVersion}"
+    @objectVersion = "#{objectVersion}"
     mainGroup =  AppContainer::PBXGroup.new
     mainGroup.sourceTree = "<group>"
     mainGroup.children = Array.new
     @groups[project.mainGroup] = mainGroup
-    @rootObject = project.mainGroup
+    @rootObject = @projectUUID
+    configlist = AppContainer::XCProject.generateUUID4
+    @XCConfigurationLists[configlist] = AppContainer::XCConfigurationList.new
+    @XCConfigurationLists[configlist].buildConfigurations = Array.new
+    @XCConfigurationLists[configlist].defaultConfigurationIsVisible = "0"
+    @XCConfigurationLists[configlist].defaultConfigurationName = "Debug"
+    project.buildConfigurationList = configlist
     buildConfigs.each do |xcbuildconfig|
       uuid = AppContainer::XCProject.generateUUID4
-      project.buildConfigurationList << uuid
-      @objects[uuid] = xcbuildconfig
+      @XCBuildConfigurations[uuid] = xcbuildconfig
+      @XCConfigurationLists[configlist].buildConfigurations << uuid
     end
     @PBXProjectSection = project
-    @projectUUID = project.mainGroup
+
     setAllPBXObjects
   end
 end
